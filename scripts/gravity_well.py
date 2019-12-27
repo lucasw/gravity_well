@@ -150,29 +150,29 @@ class GravityWell:
     def __init__(self):
         self.update_dt = 0.05
 
-        min_x = rospy.get_param("~min_x", -5.0)
         max_x = rospy.get_param("~max_x", 5.0)
+        min_x = rospy.get_param("~min_x", -5.0)
         min_radius = rospy.get_param("~min_radius", 0.01)
-        max_radius = rospy.get_param("~max_radius", 0.5)
+        max_radius = rospy.get_param("~max_radius", 0.1)
 
         self.marker_pub = rospy.Publisher("marker_array", MarkerArray, queue_size=10)
 
         self.spheres = []
-        for i in range(1):
+        for i in range(10):
             x = random.uniform(min_x, max_x)
             y = random.uniform(min_x, max_x)
             z = random.uniform(min_x, max_x)
-            radius = logn_uniform(min_radius, max_radius)
+            radius = logn_uniform(min_radius, max_radius, base=2.0)
             mass = 2.0 * 4.0/3.0 * math.pi * radius**3
             sphere = Sphere(x, y, z, radius, mass)
             sphere.marker.id = i
             self.spheres.append(sphere)
 
         self.projectiles = []
-        for i in range(1):
-            x = random.uniform(min_x * 2, max_x * 2)
-            y = random.uniform(min_x * 2, max_x * 2)
-            z = random.uniform(0.0, max_x * 4)
+        for i in range(5):
+            x = random.uniform(min_x * 1.5, max_x * 1.5)
+            y = random.uniform(min_x * 1.5, max_x * 1.5)
+            z = random.uniform(min_x * 1.5, max_x * 1.5)
             max_v = 1.0
             vx = random.uniform(-max_v, max_v)
             vy = random.uniform(-max_v, max_v)
@@ -201,6 +201,8 @@ class GravityWell:
     def pub_projectiles(self):
         marker_array = MarkerArray()
         for projectile in self.projectiles:
+            if projectile.enabled and self.count % 60 == 0:
+                projectile.markers[0].points = projectile.markers[0].points[1::2]
             marker_array.markers.extend(projectile.get_markers())
         self.marker_pub.publish(marker_array)
 
